@@ -106,7 +106,7 @@ class PeerNode:
         return dict(self.V)
 
     # ------------- Messaging -------------
-    def _make_payload(self, kind: str, msg_id: str, to_name: str, text: str) -> bytes:
+    def _make_payload(self, kind: str, msg_id: str, to_name: str, text: str, extra: dict | None = None) -> bytes:
         L = self.l_on_send()
         V = self.v_on_send()
         payload = {
@@ -121,6 +121,8 @@ class PeerNode:
             "local_ts": now_local_with_offset(self.offset_s),
             "mono_send": time.monotonic(),
         }
+        if extra:
+            payload.update({k: v for k, v in extra.items() if v is not None})
         return json.dumps(payload).encode()
 
     def _send_to(self, to_name: str, raw: bytes):
@@ -136,9 +138,14 @@ class PeerNode:
         self._send_to(to_name, self._make_payload("chat", msg_id, to_name, text))
         self._print(f"[{self.name}] SENT chat -> {to_name}: id={msg_id} text='{text}'")
 
-    def send_ack(self, to_name: str, correlate_id: str):
+    def send_ack(self, to_name: str, correlate_id: str, orig_chat_local_ts: float | None = None, orig_recv_local_ts: float | None = None):
         msg_id = f"ACK-{self.name}-{int(time.monotonic()*1000)}"
-        self._send_to(to_name, self._make_payload("ack", msg_id, to_name, f"Ack:{correlate_id}"))
+        extra = {}
+        if orig_chat_local_ts is not None:
+            extra["orig_chat_local_ts"] = orig_chat_local_ts   # t1 (sender local when original chat sent)
+        if orig_recv_local_ts is not None:
+            extra["orig_recv_local_ts"] = orig_recv_local_ts   # t2 (receiver local when chat was received)
+        self._send_to(to_name, self._make_payload("ack", msg_id, to_name, f"Ack:{correlate_id}", extra))
         self._print(f"[{self.name}] SENT ack  -> {to_name}: id={msg_id} for={correlate_id}")
 
     # ------------- Interactive input -------------
@@ -245,8 +252,24 @@ class PeerNode:
                                     f"from {msg.get('sender')} id={msg.get('id')} "
                                     f"L_in={inL}->{self.L} V_in={inV}->{self.V}")
                         if msg.get("kind") == "chat":
+                            orig_chat_ts = msg.get("local_ts")
+                            recv_local_ts = now_local_with_offset(self.offset_s)
+                            recv_mono = time.monotonic()
                             time.sleep(self.proc_delay_s)
-                            self.send_ack(msg["sender"], msg["id"])
+                            self.send_ack(msg["sender"], msg["id"],
+                                        orig_chat_local_ts=orig_chat_ts,
+                                        orig_recv_local_ts=recv_local_ts)
+                        if msg.get("kind") == "ack":
+                            t1 = msg.get("orig_chat_local_ts")
+                            t2 = msg.get("orig_recv_local_ts")
+                            t3 = msg.get("local_ts")
+                            if t1 is not None and t2 is not None and t3 is not None:
+                                t4 = now_local_with_offset(self.offset_s)
+                                try:
+                                    offset = ((t2 - t1) + (t3 - t4)) / 2.0
+                                    self._print(f"[{self.name}] SYNC estimate w/ {msg.get('sender')}: offset={offset:+.3f}s (t1={t1:.3f} t2={t2:.3f} t3={t3:.3f} t4={t4:.3f})")
+                                except Exception:
+                                    pass
 
                 # Handle user input lines
                 try:
@@ -301,4 +324,3 @@ if __name__ == "__main__":
         init_text=args.msg.strip(),
         default_to=args.default_to,
     ).run()
-
