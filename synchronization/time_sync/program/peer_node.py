@@ -32,6 +32,7 @@ class PeerNode:
         initiate_broadcast: bool,
         init_text: str,
         default_to: str | None,
+        drift_ms_per_sec: float = 0.0,
     ):
         self.name = name
         self.listen = (listen_host, listen_port)
@@ -43,6 +44,9 @@ class PeerNode:
         self.initiate_broadcast = initiate_broadcast
         self.init_text = init_text
         self.default_to = default_to
+        self.drift_ms_per_sec = drift_ms_per_sec
+        self.drift_s_per_sec = drift_ms_per_sec / 1000.0
+        self.start_real = time.time()
 
         # Logical clocks
         self.L = 0  # Lamport
@@ -70,7 +74,7 @@ class PeerNode:
         self._print(f"[{self.name}] Peers: " + (", ".join(f"{n}@{h}:{p}" for n,(h,p) in self.peers.items()) or "(none)"))
         if self.logger:
             self._print(f"[{self.name}] Collector: {self.logger}")
-        self._print(f"[{self.name}] Clock offset={self.offset_s:+.3f}s, proc_delay={self.proc_delay_s*1000:.0f}ms")
+        self._print(f"[{self.name}] Clock offset={self.offset_s:+.3f}s, proc_delay={self.proc_delay_s*1000:.0f}ms, drift={self.drift_ms_per_sec:+.3f}ms/s")
         self._print(
             "\nType messages:\n"
             "  @NAME your message      -> send to one peer\n"
@@ -105,6 +109,12 @@ class PeerNode:
         self.V[self.name] = self.V.get(self.name, 0) + 1
         return dict(self.V)
 
+    # ------------- Time w/ drift -------------
+    def now_local_with_offset(self) -> float:
+        """Calculate local time with offset and drift simulation."""
+        elapsed = time.time() - self.start_real
+        return time.time() + self.offset_s + self.drift_s_per_sec * elapsed
+
     # ------------- Messaging -------------
     def _make_payload(self, kind: str, msg_id: str, to_name: str, text: str, extra: dict | None = None) -> bytes:
         L = self.l_on_send()
@@ -118,7 +128,7 @@ class PeerNode:
             "text": text,
             "lamport": L,
             "vclock": V,
-            "local_ts": now_local_with_offset(self.offset_s),
+            "local_ts": self.now_local_with_offset(),
             "mono_send": time.monotonic(),
         }
         if extra:
@@ -253,7 +263,7 @@ class PeerNode:
                                     f"L_in={inL}->{self.L} V_in={inV}->{self.V}")
                         if msg.get("kind") == "chat":
                             orig_chat_ts = msg.get("local_ts")
-                            recv_local_ts = now_local_with_offset(self.offset_s)
+                            recv_local_ts = self.now_local_with_offset()
                             recv_mono = time.monotonic()
                             time.sleep(self.proc_delay_s)
                             self.send_ack(msg["sender"], msg["id"],
@@ -264,7 +274,7 @@ class PeerNode:
                             t2 = msg.get("orig_recv_local_ts")
                             t3 = msg.get("local_ts")
                             if t1 is not None and t2 is not None and t3 is not None:
-                                t4 = now_local_with_offset(self.offset_s)
+                                t4 = self.now_local_with_offset()
                                 try:
                                     offset = ((t2 - t1) + (t3 - t4)) / 2.0
                                     self._print(f"[{self.name}] SYNC estimate w/ {msg.get('sender')}: offset={offset:+.3f}s (t1={t1:.3f} t2={t2:.3f} t3={t3:.3f} t4={t4:.3f})")
@@ -302,6 +312,7 @@ def parse_args():
     grp.add_argument("--initiate-broadcast", action="store_true", help="Broadcast initial message to all peers")
     ap.add_argument("--msg", default="", help="Initial message text (optional)")
     ap.add_argument("--default-to", metavar="NAME", help="Default recipient for bare input lines")
+    ap.add_argument("--drift-ms-per-sec", type=float, default=0.0, help="Simulated clock drift")
     args = ap.parse_args()
 
     lh, lp = args.listen[0], int(args.listen[1])
@@ -323,4 +334,5 @@ if __name__ == "__main__":
         initiate_broadcast=args.initiate_broadcast,
         init_text=args.msg.strip(),
         default_to=args.default_to,
+        drift_ms_per_sec=args.drift_ms_per_sec,
     ).run()

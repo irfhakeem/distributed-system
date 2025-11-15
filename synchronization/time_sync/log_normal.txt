@@ -1,0 +1,257 @@
+=== Naive order (by sender local_ts) — may violate causality ===
+CHAT-A-11479276 A->B local_ts=1763232525.434 L=1 V={'A': 1, 'B': 0, 'D': 0} "Hello from A"
+CHAT-A-11479327 A->D local_ts=1763232525.485 L=2 V={'A': 2, 'B': 0, 'D': 0} "Hello from A"
+ACK-B-11504910 B->A local_ts=1763232549.868 L=5 V={'B': 2, 'A': 3, 'D': 0} "Ack:CHAT-A-11504899"
+ACK-D-11504911 D->A local_ts=1763232549.869 L=6 V={'D': 2, 'A': 4, 'B': 0} "Ack:CHAT-A-11504899"
+CHAT-A-11504899 A->B local_ts=1763232551.057 L=3 V={'A': 3, 'B': 0, 'D': 0} "askldjansdi123"
+CHAT-A-11504899 A->D local_ts=1763232551.057 L=4 V={'A': 4, 'B': 0, 'D': 0} "askldjansdi123"
+ACK-D-11519197 D->A local_ts=1763232564.155 L=11 V={'D': 4, 'A': 8, 'B': 2} "Ack:CHAT-A-11519186"
+ACK-B-11519197 B->A local_ts=1763232564.155 L=10 V={'B': 4, 'A': 7, 'D': 2} "Ack:CHAT-A-11519186"
+CHAT-A-11519186 A->B local_ts=1763232565.344 L=8 V={'A': 7, 'B': 2, 'D': 2} "test"
+CHAT-A-11519186 A->D local_ts=1763232565.344 L=9 V={'A': 8, 'B': 2, 'D': 2} "test"
+ACK-B-11525541 B->A local_ts=1763232570.499 L=16 V={'B': 6, 'A': 11, 'D': 4} "Ack:CHAT-A-11525528"
+ACK-D-11525542 D->A local_ts=1763232570.500 L=17 V={'D': 6, 'A': 12, 'B': 4} "Ack:CHAT-A-11525528"
+CHAT-A-11525528 A->B local_ts=1763232571.686 L=14 V={'A': 11, 'B': 4, 'D': 4} "test"
+CHAT-A-11525528 A->D local_ts=1763232571.686 L=15 V={'A': 12, 'B': 4, 'D': 4} "test"
+ACK-B-11536202 B->A local_ts=1763232581.160 L=21 V={'B': 8, 'A': 15, 'D': 6} "Ack:CHAT-A-11536191"
+ACK-D-11536203 D->A local_ts=1763232581.161 L=22 V={'D': 8, 'A': 16, 'B': 6} "Ack:CHAT-A-11536191"
+CHAT-A-11536191 A->B local_ts=1763232582.349 L=19 V={'A': 15, 'B': 6, 'D': 6} "test"
+CHAT-A-11536191 A->D local_ts=1763232582.349 L=20 V={'A': 16, 'B': 6, 'D': 6} "test"
+CHAT-A-11551874 A->B local_ts=1763232598.032 L=24 V={'A': 19, 'B': 8, 'D': 8} "asldkahdoakhjwd089w"
+CHAT-A-11551874 A->D local_ts=1763232598.032 L=25 V={'A': 20, 'B': 8, 'D': 8} "asldkahdoakhjwd089w"
+
+=== Causal order (Lamport total order) ===
+CHAT-A-11479276 A->B L=1 V={'A': 1, 'B': 0, 'D': 0} "Hello from A"
+CHAT-A-11479327 A->D L=2 V={'A': 2, 'B': 0, 'D': 0} "Hello from A"
+CHAT-A-11504899 A->B L=3 V={'A': 3, 'B': 0, 'D': 0} "askldjansdi123"
+CHAT-A-11504899 A->D L=4 V={'A': 4, 'B': 0, 'D': 0} "askldjansdi123"
+ACK-B-11504910 B->A L=5 V={'B': 2, 'A': 3, 'D': 0} "Ack:CHAT-A-11504899"
+ACK-D-11504911 D->A L=6 V={'D': 2, 'A': 4, 'B': 0} "Ack:CHAT-A-11504899"
+CHAT-A-11519186 A->B L=8 V={'A': 7, 'B': 2, 'D': 2} "test"
+CHAT-A-11519186 A->D L=9 V={'A': 8, 'B': 2, 'D': 2} "test"
+ACK-B-11519197 B->A L=10 V={'B': 4, 'A': 7, 'D': 2} "Ack:CHAT-A-11519186"
+ACK-D-11519197 D->A L=11 V={'D': 4, 'A': 8, 'B': 2} "Ack:CHAT-A-11519186"
+CHAT-A-11525528 A->B L=14 V={'A': 11, 'B': 4, 'D': 4} "test"
+CHAT-A-11525528 A->D L=15 V={'A': 12, 'B': 4, 'D': 4} "test"
+ACK-B-11525541 B->A L=16 V={'B': 6, 'A': 11, 'D': 4} "Ack:CHAT-A-11525528"
+ACK-D-11525542 D->A L=17 V={'D': 6, 'A': 12, 'B': 4} "Ack:CHAT-A-11525528"
+CHAT-A-11536191 A->B L=19 V={'A': 15, 'B': 6, 'D': 6} "test"
+CHAT-A-11536191 A->D L=20 V={'A': 16, 'B': 6, 'D': 6} "test"
+ACK-B-11536202 B->A L=21 V={'B': 8, 'A': 15, 'D': 6} "Ack:CHAT-A-11536191"
+ACK-D-11536203 D->A L=22 V={'D': 8, 'A': 16, 'B': 6} "Ack:CHAT-A-11536191"
+CHAT-A-11551874 A->B L=24 V={'A': 19, 'B': 8, 'D': 8} "asldkahdoakhjwd089w"
+CHAT-A-11551874 A->D L=25 V={'A': 20, 'B': 8, 'D': 8} "asldkahdoakhjwd089w"
+
+=== Causal order (Vector-clock topological order) ===
+CHAT-A-11479276 A->B V={'A': 1, 'B': 0, 'D': 0} L=1 "Hello from A"
+CHAT-A-11479327 A->D V={'A': 2, 'B': 0, 'D': 0} L=2 "Hello from A"
+CHAT-A-11504899 A->B V={'A': 3, 'B': 0, 'D': 0} L=3 "askldjansdi123"
+CHAT-A-11504899 A->D V={'A': 4, 'B': 0, 'D': 0} L=4 "askldjansdi123"
+ACK-B-11504910 B->A V={'B': 2, 'A': 3, 'D': 0} L=5 "Ack:CHAT-A-11504899"
+ACK-D-11504911 D->A V={'D': 2, 'A': 4, 'B': 0} L=6 "Ack:CHAT-A-11504899"
+CHAT-A-11519186 A->B V={'A': 7, 'B': 2, 'D': 2} L=8 "test"
+CHAT-A-11519186 A->D V={'A': 8, 'B': 2, 'D': 2} L=9 "test"
+ACK-B-11519197 B->A V={'B': 4, 'A': 7, 'D': 2} L=10 "Ack:CHAT-A-11519186"
+ACK-D-11519197 D->A V={'D': 4, 'A': 8, 'B': 2} L=11 "Ack:CHAT-A-11519186"
+CHAT-A-11525528 A->B V={'A': 11, 'B': 4, 'D': 4} L=14 "test"
+CHAT-A-11525528 A->D V={'A': 12, 'B': 4, 'D': 4} L=15 "test"
+ACK-B-11525541 B->A V={'B': 6, 'A': 11, 'D': 4} L=16 "Ack:CHAT-A-11525528"
+ACK-D-11525542 D->A V={'D': 6, 'A': 12, 'B': 4} L=17 "Ack:CHAT-A-11525528"
+CHAT-A-11536191 A->B V={'A': 15, 'B': 6, 'D': 6} L=19 "test"
+CHAT-A-11536191 A->D V={'A': 16, 'B': 6, 'D': 6} L=20 "test"
+ACK-B-11536202 B->A V={'B': 8, 'A': 15, 'D': 6} L=21 "Ack:CHAT-A-11536191"
+ACK-D-11536203 D->A V={'D': 8, 'A': 16, 'B': 6} L=22 "Ack:CHAT-A-11536191"
+CHAT-A-11551874 A->B V={'A': 19, 'B': 8, 'D': 8} L=24 "asldkahdoakhjwd089w"
+CHAT-A-11551874 A->D V={'A': 20, 'B': 8, 'D': 8} L=25 "asldkahdoakhjwd089w"
+
+=== Vector-clock relations (pairwise) ===
+CHAT-A-11479276 -> CHAT-A-11479327 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11504899 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11504899 (a happens-before b)
+CHAT-A-11479276 -> ACK-B-11504910 (a happens-before b)
+CHAT-A-11479276 -> ACK-D-11504911 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11479276 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11479276 -> ACK-B-11519197 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11479276 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11479276 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11479276 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11479276 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11479276 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11504899 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11504899 (a happens-before b)
+CHAT-A-11479327 -> ACK-B-11504910 (a happens-before b)
+CHAT-A-11479327 -> ACK-D-11504911 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11479327 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11479327 -> ACK-B-11519197 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11479327 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11479327 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11479327 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11479327 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11479327 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11504899 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11504910 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11504911 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11519197 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11504899 || ACK-B-11504910 (concurrent)
+CHAT-A-11504899 -> ACK-D-11504911 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11519197 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11504899 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11504899 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11504899 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11504910 || ACK-D-11504911 (concurrent)
+ACK-B-11504910 -> CHAT-A-11519186 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11519186 (a happens-before b)
+ACK-B-11504910 -> ACK-D-11519197 (a happens-before b)
+ACK-B-11504910 -> ACK-B-11519197 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11525528 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11525528 (a happens-before b)
+ACK-B-11504910 -> ACK-B-11525541 (a happens-before b)
+ACK-B-11504910 -> ACK-D-11525542 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11504910 -> ACK-B-11536202 (a happens-before b)
+ACK-B-11504910 -> ACK-D-11536203 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11504910 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11519186 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11519186 (a happens-before b)
+ACK-D-11504911 -> ACK-D-11519197 (a happens-before b)
+ACK-D-11504911 -> ACK-B-11519197 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11525528 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11525528 (a happens-before b)
+ACK-D-11504911 -> ACK-B-11525541 (a happens-before b)
+ACK-D-11504911 -> ACK-D-11525542 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11504911 -> ACK-B-11536202 (a happens-before b)
+ACK-D-11504911 -> ACK-D-11536203 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11504911 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11519186 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11519186 -> ACK-B-11519197 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11519186 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11519186 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11519197 (a happens-before b)
+CHAT-A-11519186 || ACK-B-11519197 (concurrent)
+CHAT-A-11519186 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11519186 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11519186 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11519186 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11519186 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11519197 || ACK-B-11519197 (concurrent)
+ACK-D-11519197 -> CHAT-A-11525528 (a happens-before b)
+ACK-D-11519197 -> CHAT-A-11525528 (a happens-before b)
+ACK-D-11519197 -> ACK-B-11525541 (a happens-before b)
+ACK-D-11519197 -> ACK-D-11525542 (a happens-before b)
+ACK-D-11519197 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11519197 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11519197 -> ACK-B-11536202 (a happens-before b)
+ACK-D-11519197 -> ACK-D-11536203 (a happens-before b)
+ACK-D-11519197 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11519197 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11525528 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11525528 (a happens-before b)
+ACK-B-11519197 -> ACK-B-11525541 (a happens-before b)
+ACK-B-11519197 -> ACK-D-11525542 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11519197 -> ACK-B-11536202 (a happens-before b)
+ACK-B-11519197 -> ACK-D-11536203 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11519197 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11525528 (a happens-before b)
+CHAT-A-11525528 -> ACK-B-11525541 (a happens-before b)
+CHAT-A-11525528 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11525528 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11525528 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11525528 || ACK-B-11525541 (concurrent)
+CHAT-A-11525528 -> ACK-D-11525542 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11525528 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11525528 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11525528 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11525541 || ACK-D-11525542 (concurrent)
+ACK-B-11525541 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11525541 -> CHAT-A-11536191 (a happens-before b)
+ACK-B-11525541 -> ACK-B-11536202 (a happens-before b)
+ACK-B-11525541 -> ACK-D-11536203 (a happens-before b)
+ACK-B-11525541 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11525541 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11525542 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11525542 -> CHAT-A-11536191 (a happens-before b)
+ACK-D-11525542 -> ACK-B-11536202 (a happens-before b)
+ACK-D-11525542 -> ACK-D-11536203 (a happens-before b)
+ACK-D-11525542 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11525542 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11536191 -> CHAT-A-11536191 (a happens-before b)
+CHAT-A-11536191 -> ACK-B-11536202 (a happens-before b)
+CHAT-A-11536191 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11536191 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11536191 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11536191 || ACK-B-11536202 (concurrent)
+CHAT-A-11536191 -> ACK-D-11536203 (a happens-before b)
+CHAT-A-11536191 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11536191 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11536202 || ACK-D-11536203 (concurrent)
+ACK-B-11536202 -> CHAT-A-11551874 (a happens-before b)
+ACK-B-11536202 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11536203 -> CHAT-A-11551874 (a happens-before b)
+ACK-D-11536203 -> CHAT-A-11551874 (a happens-before b)
+CHAT-A-11551874 -> CHAT-A-11551874 (a happens-before b)
