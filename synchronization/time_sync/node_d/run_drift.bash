@@ -1,9 +1,8 @@
 #!/bin/bash
 
 python3 peer_node.py \
-	  --name A --listen 0.0.0.0 5000 \
+	  --name D --listen 0.0.0.0 5002 \
 	  --peers A@192.168.122.159:5000 B@192.168.122.198:5001 D@192.168.122.37:5002 \
 	  --logger 192.168.122.253 9999 \
-	  --offset-ms 600 \
-	  --initiate-broadcast --msg "Hello from A with drift" \
-	  --drift-ms-per-sec 2.5
+	  --offset-ms -600 \
+      --drift-ms-per-sec 0.0
