@@ -15,7 +15,7 @@
 # Quick benchmark (mix of GET/PUT) to random nodes
 --nodes 127.0.0.1:8001,127.0.0.1:8002,127.0.0.1:8003 -- bench --ops 50 --key color --put-ratio 0.3
 
-# Interactive REPL 
+# Interactive REPL
 --nodes 127.0.0.1:8001,127.0.0.1:8002,127.0.0.1:8003 -- repl
 """
 
@@ -23,8 +23,7 @@ import argparse, socket, time, threading, random, statistics, sys
 from typing import List, Tuple
 
 # --------------------- TCP helpers ---------------------
-
-def send_cmd(host: str, port: int, cmd: str, timeout: float=2.0) -> str:
+def send_cmd(host: str, port: int, cmd: str, timeout: float=10.0) -> str:
     t0 = time.perf_counter()
     with socket.create_connection((host, port), timeout=timeout) as s:
         s.sendall((cmd + "\n").encode())
@@ -184,4 +183,3 @@ if __name__ == '__main__':
         action_bench(nodes, args.ops, args.key, args.put_ratio)
     elif args.mode == 'repl':
         action_repl(nodes)
-

@@ -183,19 +183,28 @@ class Gossip:
 
 class MutexCoordinator:
     def __init__(self):
-        self.lock=threading.Lock(); self.held_by: Optional[int]=None; self.queue: List[int]=[]
+        self.lock=threading.Lock(); self.held_by: Optional[int]=None; self.queue: List[int]=[]; self.grants: Dict[int, bool] = {}
+
     def req(self,nid:int)->bool:
         with self.lock:
             if self.held_by is None:
-                self.held_by=nid; return True
-            if nid not in self.queue: self.queue.append(nid)
+                self.held_by=nid;self.grants[nid] = True;return True
+            if nid not in self.queue:
+                self.queue.append(nid)
+                self.grants[nid] = False
             return False
+
+    def check_grant(self, nid: int) -> bool:
+        with self.lock:
+            return self.grants.get(nid, False)
+
     def rel(self,nid:int)->Optional[int]:
         with self.lock:
             if self.held_by==nid:
                 self.held_by=None
+                self.grants[nid] = False
                 if self.queue:
-                    nxt=self.queue.pop(0); self.held_by=nxt; return nxt
+                    nxt=self.queue.pop(0); self.held_by=nxt; self.grants[nxt] = True; return nxt
         return None
 
 class Node:
@@ -268,6 +277,9 @@ class Node:
                 conn.sendall((b"GRANTED\n" if granted else b"QUEUED\n")); return
             if cmd=='LOCK_REL' and len(parts)==2:
                 nid=int(parts[1]); self.coord.rel(nid); conn.sendall(b"OK\n"); return
+            if cmd=='LOCK_CHECK' and len(parts)==2:
+                nid=int(parts[1]); granted=self.coord.check_grant(nid)
+                conn.sendall((b"GRANTED\n" if granted else b"WAIT\n")); return
             conn.sendall(b"ERR\n")
         finally:
             try: conn.close()
@@ -298,23 +310,52 @@ class Node:
 
     # ------- Distributed mutex via leader -------
     def _acquire_mutex(self):
+        leader=self.gossip.leader()
+        # Jika tidak ada leader
+        if leader is None:
+            time.sleep(0.1)
+            return self._acquire_mutex()
+
+        # Jika leader
+        if leader==self.id:
+            while not self.coord.req(self.id):
+                time.sleep(0.05)
+            return
+
+        addr=self.gossip.addr_of(leader)
+        if not addr:
+            time.sleep(0.1)
+            return self._acquire_mutex()
+
+        # Kirim init req
+        try:
+            s=socket.create_connection(addr, timeout=0.5)
+            s.sendall(f"LOCK_REQ {self.id}\n".encode())
+            s.shutdown(socket.SHUT_WR)
+            resp=recv_all(s); s.close()
+            if resp.strip()=="GRANTED":
+                return
+        except Exception:
+            time.sleep(0.1)
+            return self._acquire_mutex()
+
         while True:
+            time.sleep(0.1)
             leader=self.gossip.leader()
-            if leader is None:
-                time.sleep(0.05); continue
-            if leader==self.id:
-                if self.coord.req(self.id): return
-                time.sleep(0.05); continue
+            if leader is None or leader != self.gossip.leader():
+                return self._acquire_mutex()
             addr=self.gossip.addr_of(leader)
             if not addr:
-                time.sleep(0.05); continue
+                return self._acquire_mutex()
             try:
                 s=socket.create_connection(addr, timeout=0.5)
-                s.sendall(f"LOCK_REQ {self.id}\n".encode()); s.shutdown(socket.SHUT_WR)
+                s.sendall(f"LOCK_CHECK {self.id}\n".encode())
+                s.shutdown(socket.SHUT_WR)
                 resp=recv_all(s); s.close()
-                if resp.strip()=="GRANTED": return
-            except Exception: pass
-            time.sleep(0.05)
+                if resp.strip()=="GRANTED":
+                    return
+            except Exception:
+                pass
 
     def _release_mutex(self):
         leader=self.gossip.leader()
@@ -412,4 +453,3 @@ def main():
 
 if __name__=='__main__':
     main()
-
